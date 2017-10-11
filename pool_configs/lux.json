@@ -1,0 +1,71 @@
+{
+    "enabled": true,
+    "coin": "lux.json",
+
+    "auxes": [],
+    "address": "LQXz7JETLKRkm9REqugaNAAaZBhhWBXt5r",
+
+    "rewardRecipients": {
+        "": 1.5
+      
+    },
+
+    "paymentProcessing": {
+        "enabled": true,
+        "paymentInterval": 600,
+        "minimumPayment": 1,
+        "daemon": {
+            "host": "127.0.0.1",
+            "port": 9887,
+            "user": "your-user-name",
+            "password": "your-password"
+        }
+    },
+
+    "ports": {
+        "3008": {
+            "diff": 2
+        },
+        "3032": {
+            "diff": 0.01,
+            "varDiff": {
+                "minDiff": 0.01,
+                "maxDiff": 16,
+                "targetTime": 15,
+                "retargetTime": 90,
+                "variancePercent": 30
+            }
+        },
+        "3256": {
+            "diff": 16
+        }
+    },
+
+    "daemons": [
+        {
+            "host": "127.0.0.1",
+            "port": 9887,
+            "user": "your-user-name",
+            "password": "your-password"
+        }
+    ],
+
+    "p2p": {
+        "enabled": false,
+        "host": "127.0.0.1",
+        "port": 19333,
+        "disableTransactions": false
+    },
+
+    "mposMode": {
+        "enabled": false,
+        "host": "127.0.0.1",
+        "port": 3306,
+        "user": "me",
+        "password": "mypass",
+        "database": "ltc",
+        "checkPassword": false,
+        "autoCreateWorker": false
+    }
+
+}
