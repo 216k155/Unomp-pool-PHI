@@ -1,134 +1,8 @@
-[![Build Status](https://travis-ci.org/UNOMP/unified-node-open-mining-portal.png?branch=master)](https://travis-ci.org/UNOMP/unified-node-open-mining-portal)
-
-#### Unified NOMP
-
-This repo will serve as an open source multipool. Multipool capabilities are in alpha testing in this version. This will give the ability to utilize NOMP with merged capabilities but NO merged coin payouts. *ONLY* the main chain coins will payout and calculate correctly at the moment.
-
-This portal is an extremely efficient, highly scalable, all-in-one, easy to setup cryptocurrency mining pool written in Node.js. 
-It contains a merged stratum pool server; reward/payment/share processor for multipooling; and an (*in progress*)
-responsive user-friendly front-end website featuring mining instructions, in-depth live statistics, and an admin center.
-
-#### Production Usage Notice - Do it with caution!
-This is beta software. All of the following are things that can change and break an existing setup: functionality of any feature,
-structure of configuration files and structure of redis data. If you use this software in production then *DO NOT* pull new code straight into 
-production usage because it can and ~~often~~ will break your setup and require you to tweak things like config files or redis data, among other things.
-
-#### Table of Contents
-* [Features](#features)
-  * [Attack Mitigation](#attack-mitigation)
-  * [Security](#security)
-  * [Planned Features](#planned-features)
-* [Usage](#usage)
-  * [Requirements](#requirements)
-  * [Setting Up Coin Daemon](#0-setting-up-coin-daemon)
-  * [Downloading & Installing](#1-downloading--installing)
-  * [Configuration](#2-configuration)
-    * [Portal Config](#portal-config)
-    * [Coin Config](#coin-config)
-    * [Pool Config](#pool-config)
-    * [Setting Up Blocknotify](#optional-recommended-setting-up-blocknotify)
-  * [Starting the Portal](#3-start-the-portal)
-  * [Upgrading UNOMP](#upgrading)
-* [Donations](#donations)
-* [Credits](#credits)
-* [License](#license)
-
-
-### Features
-
-* For the pool server it uses the highly efficient [node-merged-pool](//github.com/sigwo/node-merged-pool) module which
-supports vardiff, POW & POS, transaction messages, anti-DDoS, IP banning, [several hashing algorithms](//github.com/sigwo/node-merged-pool#hashing-algorithms-supported).
-
-* This implementation is [merged mining capable](https://en.bitcoin.it/wiki/Merged_mining_specification). You may add AUXPoW coins to the main chain configurations. 
-At this point, the merged coins do everything EXCEPT display on the site or payout automatically. Shares, blocks, and coinbase transactions complete as planned.
-
-* Multicoin ability - this software was built from the ground up to run with multiple coins simultaneously (which can
-have different properties and hashing algorithms). It can be used to create a pool for a single coin or for multiple
-coins at once. The pools use clustering to load balance across multiple CPU cores.
-
-* For reward/payment processing, shares are inserted into Redis (a fast NoSQL key/value store). The PROP (proportional)
-reward system is used with [Redis Transactions](http://redis.io/topics/transactions) for secure and super speedy payouts.
-There is zero risk to the pool operator. Shares from rounds resulting in orphaned blocks will be merged into share in the
-current round so that each and every share will be rewarded.
-
-* This portal ~~does not~~ will never have user accounts/logins/registrations. Instead, miners simply use their coin address for stratum authentication. 
-
-* Coin-switching ports using coin-networks and crypto-exchange APIs to detect profitability. 
-
-* Past MPOS functionality is no longer maintained, althought it is working for now.
- 
-* Basic multipooling features included, but *NOT* enabled by default. You must follow the [README](//github.com/sigwo/unified-node-open-mining-portal/blob/master/multipool/README) in the [multipool](//github.com/sigwo/unified-node-open-mining-portal/blob/master/multipool) folder. More updates *WILL* happen in the multipool options and will stay open source.
-
-#### Attack Mitigation
-* Detects and thwarts socket flooding (garbage data sent over socket in order to consume system resources).
-* Detects and thwarts zombie miners (botnet infected computers connecting to your server to use up sockets but not sending any shares).
-* Detects and thwarts invalid share attacks:
-   * UNOMP is not vulnerable to the low difficulty share exploits happening to other pool servers. Other pool server
-   software has hardcoded guesstimated max difficulties for new hashing algorithms while UNOMP dynamically generates the
-   max difficulty for each algorithm based on values founds in coin source code.
-   * IP banning feature which on a configurable threshold will ban an IP for a configurable amount of time if the miner
-   submits over a configurable threshold of invalid shares.
-* UNOMP is written in Node.js which uses a single thread (async) to handle connections rather than the overhead of one
-thread per connection, and clustering is also implemented so all CPU cores are taken advantage of. Result? Fastest stratum available.
-
-
-#### Security
-UNOMP has some implicit security advantages for pool operators and miners:
-* Without a registration/login system, non-security-oriented miners reusing passwords across pools is no longer a concern.
-* Automated payouts by default and pool profits are sent to another address so pool wallets aren't plump with coins -
-giving hackers little reward and keeping your pool from being a target.
-* Miners can notice lack of automated payments as a possible early warning sign that an operator is about to run off with their coins.
-
-
-#### Planned Features
-
-* UNOMP API - Used by the website to display stats and information about the pool(s) on the portal's front-end website. Mostly complete.
-
-* Integration of [addie.cc](http://addie.cc) usernames for multiple payout type without using a public address that may/may not work with the 
-coin (still not 100% committed yet, see Feature #7)
-
-* Upgrade codebase to operate in node v 0.12. Multi-hashing module is still throwing fits.
-
-Usage
-=====
+#### Unified NOMP Supported PHI Algo
+====================================
 
 #### Requirements
-* Coin daemon(s) (find the coin's repo and build latest version from source)
-* Install node.js (correct procedure below)
-* Install npm (correct procedure below)
-* [Redis](http://redis.io/) key-value store v2.6+ ([follow these instructions](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-redis))
-
-OPTIONAL: `sudo npm install posix`, but you will have to start the pool `sudo node init.js`
-
-##### Seriously
-Those are legitimate requirements. If you use old versions of Node.js or Redis that may come with your system package manager then you will have problems. Follow the linked 
-instructions to get the last stable versions.
-
-
-[**Redis security warning**](http://redis.io/topics/security): be sure firewall access to redis - an easy way is to
-include `bind 127.0.0.1` in your `redis.conf` file. Also it's a good idea to learn about and understand software that
-you are using - a good place to start with redis is [data persistence](http://redis.io/topics/persistence).
-
-Redis server may require a password, this is done using the requirepass directive in the redis configuration file.
-By default config.json contains blank "" - means disabled redis auth, to set any password just put "redispass" in quotes.
-
-#### 0) Setting up coin daemon
-Follow the build/install instructions for your coin daemon. Your coin.conf file should end up looking something like this:
-```
-daemon=1
-rpcuser=litecoinrpc
-rpcpassword=securepassword
-rpcport=19332
-```
-For redundancy, its recommended to have at least two daemon instances running in case one drops out-of-sync or offline,
-all instances will be polled for block/transaction updates and be used for submitting blocks. Creating a backup daemon
-involves spawning a daemon using the `-datadir=/backup` command-line argument which creates a new daemon instance with
-it's own config directory and coin.conf file. Learn about the daemon, how to use it and how it works if you want to be
-a good pool operator. For starters be sure to read:
-   * https://en.bitcoin.it/wiki/Running_bitcoind
-   * https://en.bitcoin.it/wiki/Data_directory
-   * https://en.bitcoin.it/wiki/Original_Bitcoin_client/API_Calls_list
-   * https://en.bitcoin.it/wiki/Difficulty
+-----------------
 
 #### 1) Downloading & Installing
 
@@ -140,7 +14,7 @@ curl https://raw.githubusercontent.com/creationix/nvm/v0.16.1/install.sh | sh
 source ~/.profile
 nvm install 0.10.25
 nvm use 0.10.25
-git clone https://github.com/UNOMP/unified-node-open-mining-portal.git unomp
+git clone https://github.com/216k155/Unomp-pool-PHI.git phi-pool
 cd unomp
 npm update
 ```
