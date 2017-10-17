@@ -1,5 +1,10 @@
 {
     "name": "Lux",
     "symbol": "LUX",
-    "algorithm": "phi1612"
+    "algorithm": "phi1612",
+    "nValue": 1024, //optional - defaults to 1024
+    "rValue": 1, //optional - defaults to 1
+    "txMessages": true, //optional - defaults to false,
+    "getblocktemplate": "POS", //optional - Used for POS coins with the old getblocktemplate parameters
+    "reward": "POS" //optional - Used for hybrid POW/POS coins
 }
